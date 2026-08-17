@@ -3,6 +3,24 @@ pipeline {
 
     stages {
 
+        stage('Fetch Images') {
+            steps {
+                script {
+
+                    def imageTags = sh(
+                        script: 'python3 get_images.py',
+                        returnStdout: true
+                    ).trim()
+
+                    echo "Images found:"
+                    echo imageTags
+
+                    env.IMAGE_TAGS = imageTags
+                }
+            }
+        }
+
+
         stage('Select Image') {
             steps {
                 script {
@@ -12,12 +30,15 @@ pipeline {
                         parameters: [
                             choice(
                                 name: 'IMAGE_TAG',
-                                choices: ['1.0', '2.0', '3.0'],
-                                description: 'Choose Docker image version'
+                                choices: env.IMAGE_TAGS,
+                                description: 'Select image from ECR'
                             )
                         ]
                     )
-                    echo "You selected: ${selectedImage}"
+
+                    echo "Selected image: ${selectedImage}"
+
+                    env.SELECTED_IMAGE = selectedImage
                 }
             }
         }
