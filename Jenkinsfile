@@ -8,7 +8,7 @@ pipeline {
                 script {
 
                     def imageTags = sh(
-                        script: 'python3 get_images.py',
+                        script: '/opt/jenkins-python/bin/python get_images.py',
                         returnStdout: true
                     ).trim()
 
