@@ -1,6 +1,8 @@
+import base64
 from sys import deactivate_stack_trampoline
 
 import boto3
+import paramiko
 import requests
 import time
 
@@ -215,3 +217,122 @@ for image in images_with_tags:
 
 # Let the user select the image from the list (hint: https://www.jenkins.io/doc/pipeline/steps/pipeline-input-step/)
 
+# check file get_images.py
+
+
+# SSH into the EC2 server (using Python)
+
+# def connect_to_ec2():
+#     print("connecting to EC2...")
+#     ssh = paramiko.SSHClient()
+#     ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+#     ssh.connect('138.68.149.227', username="root", key_filename="/Users/support/.ssh/id_rsa")
+#     stdin, stdout, stderr = ssh.exec_command('docker stop 82a1f35f97c8')
+#     # print(stdin)
+#     print(stdout.readline())
+#     ssh.close()
+#
+# connect_to_ec2()
+
+
+# def connect_to_ec2():
+#     print("Connecting to EC2...")
+#
+#     ssh = paramiko.SSHClient()
+#     ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+#
+#     ssh.connect(
+#         "138.68.149.227",
+#         username="root",
+#         key_filename="/Users/support/.ssh/id_rsa"
+#     )
+#     print("Connected!")
+#
+#     return ssh
+# connect_to_ec2()
+
+# Run docker login to authenticate with ECR repository (using Python)
+
+
+EC2_IP = "51.44.160.102"
+EC2_USER = "admin"
+KEY_FILE = "/Users/support/.ssh/id_rsa"
+
+ECR_REGISTRY = "705754325868.dkr.ecr.eu-west-3.amazonaws.com"
+REGION = "eu-west-3"
+
+def connect_to_ec2():
+    print("Connecting to EC2...")
+
+    ssh = paramiko.SSHClient()
+    ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+
+    ssh.connect(
+        "51.44.160.102",
+        username="admin",
+        key_filename="/Users/support/creds/myapp-key-pair.pem"
+    )
+    print("Connected!")
+
+    return ssh
+def login_to_ecr(ssh):
+    print("Logging Docker into ECR...")
+
+    command = f"""
+    aws ecr get-login-password --region {REGION} | \
+    docker login --username AWS --password-stdin {ECR_REGISTRY}
+    """
+
+    stdin, stdout, stderr = ssh.exec_command(command)
+
+    output = stdout.read().decode()
+    error = stderr.read().decode()
+
+    print(output)
+
+    if error:
+        print(error)
+
+# Start the container from the selected image from step 2 on EC2 instance (using Python)
+
+def start_container(ssh, image_tag):
+    print("Starting container...")
+
+    image = f"705754325868.dkr.ecr.eu-west-3.amazonaws.com/automation-with-python:{image_tag}"
+
+    command = f"docker run -d -p 8080:8080 {image}"
+
+    stdin, stdout, stderr = ssh.exec_command(command)
+
+    print(stdout.read().decode())
+    print(stderr.read().decode())
+
+# ssh = connect_to_ec2()
+#
+# login_to_ecr(ssh)
+#
+# start_container(ssh, "2.0")
+#
+# ssh.close()
+
+# Validate that the application was successfully started and is accessible by sending a request to the application (using Python)
+
+def check_application():
+    print("Checking application...")
+
+    url = f"http://{EC2_IP}:8080"
+
+    try:
+        response = requests.get(url, timeout=5)
+
+        if response.status_code == 200:
+            print("Application started successfully!")
+        else:
+            print("Application is not working.")
+            print("Status code:", response.status_code)
+
+    except requests.RequestException:
+        print("Application is not reachable.")
+
+
+check_application()
