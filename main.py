@@ -211,15 +211,7 @@ for image in images_with_tags:
 
 # Fetch all 3 images from the ECR repository (using Python)
 
-ecr_client = boto3.client('ecr', region_name='eu-west-3')
-
-response = ecr_client.describe_images( repositoryName='automation-with-python')
-# print(response["imageDetails"])
-
-images = response["imageDetails"]
-for image in images:
-    if "imageTags" in image:
-        print(image["imageTags"])
+# check file get_images.py
 
 # Let the user select the image from the list (hint: https://www.jenkins.io/doc/pipeline/steps/pipeline-input-step/)
 
