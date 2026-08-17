@@ -3,23 +3,41 @@ pipeline {
 
     stages {
 
+//        stage('Fetch Images') {
+//            steps {
+//                script {
+//
+//                    def imageTags = sh(
+//                        script: '/opt/jenkins-python/bin/python get_images.py',
+//                        returnStdout: true
+//                    ).trim()
+//
+//                    echo "Images found:"
+//                    echo imageTags
+//
+//                    env.IMAGE_TAGS = imageTags
+//                }
+//            }
+//        }
+
         stage('Fetch Images') {
             steps {
-                script {
+                withCredentials([
+                    string(credentialsId: 'jenkins_aws_access_key_id', variable: 'AWS_ACCESS_KEY_ID'),
+                    string(credentialsId: 'jenkins_aws_secret_access_key', variable: 'AWS_SECRET_ACCESS_KEY')
+                ]) {
+                    script {
+                        def imageTags = sh(
+                            script: '/opt/jenkins-python/bin/python get_images.py',
+                            returnStdout: true
+                        ).trim()
 
-                    def imageTags = sh(
-                        script: '/opt/jenkins-python/bin/python get_images.py',
-                        returnStdout: true
-                    ).trim()
-
-                    echo "Images found:"
-                    echo imageTags
-
-                    env.IMAGE_TAGS = imageTags
+                        echo imageTags
+                        env.IMAGE_TAGS = imageTags
+                    }
                 }
             }
         }
-
 
         stage('Select Image') {
             steps {
